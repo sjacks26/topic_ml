@@ -1,22 +1,34 @@
 """
 
 Author: Sam
-Date: Nov 2017
-This file sets parameters and locates input files (including data and stopwords)
+Date: Feb 2018
 
+This file should be the only feel that users make any changes to.
+
+Input data should be in a csv file with three columns: message id, message text, topics
 """
 
 from datetime import datetime
+import os
 
 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-platform = "BOTH" # Options are "TW", "FB", or "BOTH"
-tw_input_data_file = '/Users/samjackson/Google Drive/Projects/Illuminating 2016/Topic/post_SMS/data/tw_fixed.csv' # Should be a csv file
-fb_input_data_file = '/Users/samjackson/Google Drive/Projects/Illuminating 2016/Topic/post_SMS/data/fb_fixed.csv' # Should be a csv file
-stopwords_file = '' # Should be a plain text file. If none provided, use NLTK English stopwords.
-tw_feature_file = '/Users/samjackson/Google Drive/Projects/Illuminating 2016/Topic/post_SMS/data/tw_for_ml_features' + str(now) + '.csv' # Should be a csv file created by GetFeatures
-fb_feature_file = '/Users/samjackson/Google Drive/Projects/Illuminating 2016/Topic/post_SMS/data/fb_for_ml_features' + str(now) + '.csv' # Should be a csv file created by GetFeatures
-comb_feature_file = '/Users/samjackson/Google Drive/Projects/Illuminating 2016/Topic/post_SMS/data/comb_ml_features' + str(now) + '.csv' # Should be a csv file created by GetFeatures
+platform = "BOTH"  # Options are "TW", "FB", or "BOTH"
+tw_input_data_file = '/Users/samjackson/Google Drive/Projects/Illuminating 2016/Topic/post_SMS/data/tw_fixed.csv'  # Should be a csv file
+fb_input_data_file = '/Users/samjackson/Google Drive/Projects/Illuminating 2016/Topic/post_SMS/data/fb_fixed.csv'  # Should be a csv file
+
+output_dir = '/Users/samjackson/Google Drive/Projects/Illuminating 2016/Topic/post_SMS/ML_from_scratch/' + str(now)
+try:
+    os.mkdir(output_dir)
+except FileExistsError:
+    pass
+
+tw_feature_file = output_dir + 'tw_features.csv'  # Will be a csv file created by GetFeatures
+fb_feature_file = output_dir + 'fb_features.csv'  # Will be a csv file created by GetFeatures
+comb_feature_file = output_dir + 'comb_features.csv'  # Will be a csv file created by GetFeatures
+
+# Pre-processing
+stopwords_file = ''  # Should be a plain text file. If none provided, use NLTK English stopwords + "rt".
 
 # Primary features
 num_unigrams = 2000
@@ -44,9 +56,9 @@ Full List of POS tags:
     . - punctuation
 '''
 
-k_folds = 5
-
+# Model parameters
 classifier = 'LinearSVC'
+k_folds = 5
 
 '''
 Classifier options:

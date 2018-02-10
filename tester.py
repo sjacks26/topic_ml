@@ -17,7 +17,7 @@ scores = model.models
 topics = sorted(scores)
 
 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-results_file = '/Users/samjackson/Google Drive/Projects/Illuminating 2016/Topic/post_SMS/ML_from_scratch/performance/' + Config.classifier + '_' + str(now) + '.txt'
+results_file = Config.output_dir + Config.classifier + '_' + str(now) + '.txt'
 
 with open(results_file, 'w') as t:
     t.write("Results generated: " + str(now))

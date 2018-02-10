@@ -18,9 +18,6 @@ tknzr = TweetTokenizer()
 
 class Main(object):
     def get_data(platform=Config.platform):
-        """
-        Input file should have three columns: message id, message text, topics
-        """
         if platform == "BOTH":
             docs1 = pd.read_csv(Config.tw_input_data_file, quotechar='"', encoding="Latin1", keep_default_na=False)
             docs2 = pd.read_csv(Config.fb_input_data_file, quotechar='"', keep_default_na=False)
@@ -37,7 +34,7 @@ class Main(object):
             docs.columns = ['id', 'text', 'topics']
             docs["text"] = docs["text"].str.replace("#", "")
             docs["text"] = docs["text"].str.replace("\n", "")
-            
+
         elif platform == "FB":
             file = Config.fb_input_data_file
             docs = pd.read_csv(file, quotechar='"', encoding="Latin1", keep_default_na=False)
