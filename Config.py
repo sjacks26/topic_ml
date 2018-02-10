@@ -25,7 +25,7 @@ pos_restriction = False
 pos_tags = ["NOUN", "ADJ"]
 
 # Additional features
-pos_counts = False
+pos_counts = True
 use_mentions = False
 
 ''' 

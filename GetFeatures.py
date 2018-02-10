@@ -29,7 +29,7 @@ class Main(object):
             docs = pd.concat([docs1, docs2])
             docs["text"] = docs["text"].str.replace("#", "")
             docs["text"] = docs["text"].str.replace("\n", "")
-            docs.reset_index(drop=True, inplace=True)
+            docs.reset_index(drop=True, inplace=True) # Without this line, combined data will have replicated indices.
 
         elif platform == "TW":
             file = Config.tw_input_data_file
@@ -37,6 +37,7 @@ class Main(object):
             docs.columns = ['id', 'text', 'topics']
             docs["text"] = docs["text"].str.replace("#", "")
             docs["text"] = docs["text"].str.replace("\n", "")
+            
         elif platform == "FB":
             file = Config.fb_input_data_file
             docs = pd.read_csv(file, quotechar='"', encoding="Latin1", keep_default_na=False)
@@ -156,9 +157,6 @@ class Main(object):
     docs = get_bigrams(docs, stops)
 
     def get_pos_counts(docs):
-        """
-        Figure out what to return
-        """
         pos_tags = docs['pos']
         pos_count_list = []
         for tags in pos_tags:
@@ -238,26 +236,25 @@ class Main(object):
             b2 = "b_" + b
             features[b2] = False
             features.loc[features["message"].str.contains(b), b2] = True
+
+        if Config.pos_counts:
+            features["pos_tags"] = docs["pos_counts"]
+            unique_pos_tags = [x for row in features["pos_tags"] for x in row]
+            unique_pos_tags = list(set(unique_pos_tags))
+            for t in range(0, len(features.index)):
+                for p in unique_pos_tags:
+                    p2 = p + "_count"
+                    try:
+                        features.loc[t, p2] = int(features.loc[t, "pos_tags"][p])
+                    except KeyError as e:
+                        print(e)
+                        features.loc[t, p2] = 0
+            features = features.drop(["pos_tags"], axis=1)
+
         for l in labels:
             features[l] = False
             features.loc[features["topics"].str.contains(l), l] = True
         features = features.drop(["topics"], axis=1)
-        features["pos_tags"] = docs["pos_counts"]
-        unique_pos_tags = [x for row in features["pos_tags"] for x in row]
-        unique_pos_tags = list(set(unique_pos_tags))
-        for t in range(0, len(features.index)):
-            for p in unique_pos_tags:
-                """
-                I should be able to use the index of features to walk through the pos tags column row by row. use features.loc[t, "pos_tags"][p].
-                I think.
-                """
-                p2 = p + "_count"
-                #features.loc[features["pos_tags"].str.contains(p), p2] = features[t, "pos_tags"][p]
-                try:
-                    features.loc[t, p2] = features.loc[t, "pos_tags"][p]
-                except KeyError as e:
-                    print(e)
-                    features.loc[t, p2] = 0
 
         if Config.platform == "BOTH":
             feature_file = Config.comb_feature_file
