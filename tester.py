@@ -1,6 +1,6 @@
-from Topic.post_SMS.ML_from_scratch import GetFeatures
-from Topic.post_SMS.ML_from_scratch import Model
-from Topic.post_SMS.ML_from_scratch import Config
+import GetFeatures
+import Model
+import Config
 from datetime import datetime
 
 '''

@@ -3,8 +3,7 @@
 This file creates functions to process text and extract features
 
 """
-
-from Topic.post_SMS.ML_from_scratch import Config
+from . import Config
 import nltk
 from nltk.tokenize import TweetTokenizer, word_tokenize
 from nltk.corpus import stopwords
@@ -219,9 +218,11 @@ class Main(object):
     unigrams, bigrams = get_vocab(docs, stops)
 
     def write_feature_file(docs, unigrams=unigrams, bigrams=bigrams, labels=labels):
-        """
-        Add POS counts
-        """
+        try:
+            os.mkdir(Config.output_dir)
+        except FileExistsError:
+            pass
+
         features = pd.DataFrame()
         features["message"] = docs["text"]
         features["topics"] = docs["topics"]
@@ -244,7 +245,6 @@ class Main(object):
                     try:
                         features.loc[t, p2] = int(features.loc[t, "pos_tags"][p])
                     except KeyError as e:
-                        print(e)
                         features.loc[t, p2] = 0
             features = features.drop(["pos_tags"], axis=1)
 
