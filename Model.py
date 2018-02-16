@@ -2,7 +2,7 @@
 This file creates functions to build a model from a feature file created by GetFeatures.py, then evaluates the model using test data as specified in Config.py
 """
 
-from . import Config
+import Config
 import pandas as pd
 from sklearn.model_selection import cross_val_predict
 from sklearn.svm import LinearSVC

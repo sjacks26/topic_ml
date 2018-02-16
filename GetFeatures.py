@@ -3,7 +3,7 @@
 This file creates functions to process text and extract features
 
 """
-from . import Config
+import Config
 import nltk
 from nltk.tokenize import TweetTokenizer, word_tokenize
 from nltk.corpus import stopwords
