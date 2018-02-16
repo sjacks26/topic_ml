@@ -9,6 +9,7 @@ from sklearn.svm import LinearSVC
 from sklearn.metrics import classification_report
 from sklearn.linear_model import SGDClassifier, LogisticRegression
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
+from datetime import datetime
 
 
 class Main(object):
@@ -77,3 +78,36 @@ class Main(object):
         return performance_results
 
     models = build_models(labeled_feature_matrices)
+
+    def write_performance(models = models, feature_file = feature_file):
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        results_file = Config.output_dir + Config.classifier + '_' + str(now) + '.txt'
+        scores = models
+        topics = sorted(scores)
+
+        with open(results_file, 'w') as t:
+            t.write("Results generated: " + str(now))
+            t.write('\n')
+            t.write("Platform: " + Config.platform)
+            t.write('\n')
+            t.write("Classifier: " + Config.classifier)
+            t.write('\n')
+            t.write("Folds: " + str(Config.k_folds))
+            t.write('\n')
+            t.write("Features:" + str(feature_file))
+            t.write('\n')
+            t.write('\t' + 'Unigrams: ' + str(Config.num_unigrams))
+            t.write('\n')
+            t.write('\t' + 'Bigrams: ' + str(Config.num_bigrams))
+            t.write('\n')
+            t.write('\t' + 'POS tags: ' + str(Config.pos_restriction))
+            t.write('\n')
+            t.write('\t' + 'Mentions: ' + str(Config.use_mentions))
+            t.write('\n\n')
+            for f in topics:
+                t.write(f)
+                t.write('\n')
+                t.write(scores[f])
+                t.write('\n')
+
+    write_performance()
