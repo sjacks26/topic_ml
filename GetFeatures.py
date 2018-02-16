@@ -3,20 +3,25 @@
 This file creates functions to process text and extract features
 
 """
-import Config
+import Config # This is a local import
 import nltk
-from nltk.tokenize import TweetTokenizer, word_tokenize
+from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords
 from nltk.tag import map_tag
 import pandas as pd
 import re
 from collections import Counter
+import os
 
 tknzr = TweetTokenizer()
 
 
 class Main(object):
     def get_data(platform=Config.platform):
+        """
+        This function reads in data based on parameters specified in Config. It does some basic text processing (removing #, for example)
+        The returned object is a Pandas dataframe containing 3 columns (message id, message text, message topics)
+        """
         if platform == "BOTH":
             docs1 = pd.read_csv(Config.tw_input_data_file, quotechar='"', encoding="Latin1", keep_default_na=False)
             docs2 = pd.read_csv(Config.fb_input_data_file, quotechar='"', keep_default_na=False)
@@ -38,7 +43,6 @@ class Main(object):
             file = Config.fb_input_data_file
             docs = pd.read_csv(file, quotechar='"', encoding="Latin1", keep_default_na=False)
             docs.columns = ['id', 'text', 'topics']
-            docs["text"] = docs["text"].str.replace("#", "")
             docs["text"] = docs["text"].str.replace("\n", "")
 
         return docs
@@ -46,6 +50,10 @@ class Main(object):
     docs = get_data()
 
     def get_labels(docs):
+        """
+        This function gets a list of all the possible topic labels.
+        The returned object is that list of unique labels
+        """
         text = docs['topics']
         text = ",".join(text)
         labels = text.split(',')
@@ -55,8 +63,11 @@ class Main(object):
 
     labels = get_labels(docs)
 
-    # If a stopword file is specified, use those stopwords. If not, use nltk stopwords.
     def get_stopwords():
+        """
+        This function sets up the list of stopwords to be used. If a stopword file is specified, use those stopwords. If not, use nltk stopwords plus "rt".
+        The returned object is the list of stopwords.
+        """
         if Config.stopwords_file:
             path = Config.stopwords_file
             temp_stopwords = []
@@ -73,6 +84,12 @@ class Main(object):
     stops = get_stopwords()
 
     def tokenize_docs(docs):
+        """
+        This function takes in the pandas dataframe containing 3 columns (id, text, and topic). It tokenizes the text column, creating a list of tokens for each message.
+        It then tags the part of speech for each token using NLTK's universal tag set, creating a list of part of speech tags in the same order as the tokens.
+        It adds a column with the lists of tokens and a column with the list of parts of speech.
+        The returned object is a pandas dataframe with 5 columns (id, text, topic, tokens, and pos [part of speech tags]).
+        """
         texts = docs['text']
         tokens = []
         pos = []
@@ -89,6 +106,11 @@ class Main(object):
     docs = tokenize_docs(docs)
 
     def get_tagged_chunked(docs):
+        """
+        This function takes in the pandas dataframe containing 5 columns (id, text, topic, tokens, and pos) and uses NLTK's named entity chunker to identify named entities.
+        By default, it uses the NE category labels. To change that, add "binary=True" as a parameter for the ne_chunk operation.
+        The returned object is a pandas dataframe with 6 columns (id, text, topic, tokens, pos, and NE chunks).
+        """
         texts = docs['text']
         chunks = []
         for text in texts:
@@ -100,6 +122,13 @@ class Main(object):
     docs = get_tagged_chunked(docs)
 
     def get_unigrams(docs, stops, pos=Config.pos_tags):
+        """
+        This function takes in the pandas dataframe with 6 columns (id, text, topic, tokens, pos, and NE chunks) and creates a list of unigrams from the tokens column.
+        It also converts all characters to lowercase.
+        It also takes in the list of stopwords. It then uses the stopwords and an alphafilter to remove words that aren't meaningful and words that contain non-letter characters.
+        ---> It also takes in a parameter from Config that is a list of desired POS tags. If Config.pos_restriction is True, it removes unigrams that are a POS that isn't in this list. This feature will be moved to the feature file function
+        The returned object is a pandas dataframe with 7 columns (id, text, topic, tokens, pos, NE chunks, and unigrams)
+        """
         def alpha_filter(w):
             pattern = re.compile('^[^a-z]+$')
             if (pattern.match(w)):
@@ -113,8 +142,9 @@ class Main(object):
         for u in unigrams:
             unigramz = [w.lower() for w in u]
             unigramz = [w for w in unigramz if not alpha_filter(w)]
+            unigramz = [w for w in unigramz if not w in stops]
 
-            # This loop should filter out unigrams that aren't the POS specified in Config, if Config.pos_restriction is true
+            # This loop should filter out unigrams that aren't the POS specified in Config, if Config.pos_restriction is true. Move this to the feature file function
             if Config.pos_restriction:
                 filt_unigrams1 = []
                 for i in range(0, len(unigramz)):
@@ -122,14 +152,19 @@ class Main(object):
                         filt_unigrams1.append(unigramz[i])
             else:
                 filt_unigrams1 = unigramz
-            filt_unigrams2 = [w for w in filt_unigrams1 if not w in stops]
-            unigram_list.append(filt_unigrams2)
+            unigram_list.append(filt_unigrams1)
         docs['unigrams'] = unigram_list
         return docs
 
     docs = get_unigrams(docs, stops)
 
     def get_bigrams(docs, stops):
+        """
+        This function takes in the pandas dataframe with 7 columns (id, text, topic, tokens, pos, NE chunks, and unigrams).
+        It creates a list of bigrams from the tokens column.
+        It takes in the list of stopwords. It then uses the stopwords and an alphafilter to remove bigrams that contain any unigrams in the list of stopword or non-letter characters.
+        The returned object is a pandas dataframe with 8 columns (id, text, topic, tokens, pos, NE chunks, unigrams, and bigrams).
+        """
         def alpha_filter(w):
             pattern = re.compile('^[^a-z]+$')
             if (pattern.match(w)):
@@ -153,6 +188,12 @@ class Main(object):
     docs = get_bigrams(docs, stops)
 
     def get_pos_counts(docs):
+        """
+        This function takes in the pandas dataframe with 8 columns (id, text, topic, tokens, pos, NE chunks, unigrams, and bigrams).
+        Using the pos tags column, it counts the number of times each pos appears in each message.
+        For each message, it creates a dict, with {pos_tag: count_of_pos_tag_in_message}. Thus, pos_count_list is a list of dictionary items.
+        The returned object is a pandas dataframe with 9 columns (id, text, topic, tokens, pos, NE chunks, unigrams, bigrams, and pos counts).
+        """
         pos_tags = docs['pos']
         pos_count_list = []
         for tags in pos_tags:
@@ -163,14 +204,29 @@ class Main(object):
 
     docs = get_pos_counts(docs)
 
-    # This isn't actually my feature file. It's partially processed data
     def write_partial_process(docs):
+        """
+        This function takes in the pandas dataframe with 9 columns (id, text, topic, tokens, pos, NE chunks, unigrams, bigrams, and pos counts).
+        It writes that dataframe to a csv file.
+        There is no returned object. This function isn't necessary to generate a feature file.
+        """
         feature_file = Config.input_data_file.replace(".csv", "_mid_process.csv")
         docs.to_csv(feature_file, index=False)
 
     # write_partial_process(docs)
 
     def get_vocab(docs, stops, u_limit=Config.num_unigrams, b_limit=Config.num_bigrams):
+        """
+        This function takes in the pandas dataframe with 9 columns (id, text, topic, tokens, pos, NE chunks, unigrams, bigrams, and pos counts).
+        It first combines the text from all the messages into one string, then tokenizes that string.
+        It also takes in the stopwords limit and uses an alphafilter to remove tokens with non-letter characters.
+        It also takes in the number of unigrams and number of bigrams to be included in the feature file (both specified in Config).
+         Using NLTK's FreqDist operation, it grabs the most frequent unigrams and bigrams (up to the specified limits) to use as features.
+        If @mentions are not to be used (as specified in Config), it removes any tokens beginning with @.
+        The returned objects are two lists:
+         the first is the list of unigram features (length specified by Config.num_unigrams).
+         the second is the list of bigrams features (length specified by Config.num_bigrams).
+        """
         def alpha_filter(w):
             pattern = re.compile('^[^a-z]+$')
             if (pattern.match(w)):
@@ -218,14 +274,30 @@ class Main(object):
     unigrams, bigrams = get_vocab(docs, stops)
 
     def write_feature_file(docs, unigrams=unigrams, bigrams=bigrams, labels=labels):
+        """
+        This function takes in the pandas dataframe with 9 columns (id, text, topic, tokens, pos, NE chunks, unigrams, bigrams, and pos counts).
+        It also takes in the list of unigram features, the list of bigram features, and the list of unique labels.
+        It then creates a new dataframe with many columns. The first two columns contain each message's id, text.
+        Next, it creates a column for each unigram feature. The value for this column is False if a message does not contain that unigram, and it is True if it does contain that unigram.
+        Next, it creates a column for each bigram feature. The value for this column is False if a message does not contain that bigram, and it is True if it does contain that bigram.
+        Next, if pos counts are to be used as features (specified in Config.pos_counts), it creates a list of unique pos tags identified by get_pos_counts.
+         It creates a column for each pos tag. Then, it counts the number of times each pos tag appears in a given message.
+         The value for each pos tag's column is the number of times that pos appears in a message.
+        Next, it creates a column with the labels for each message. Using the list of unique labels (generated by get_labels), it creates a column for each label.
+         The value for each label column is False if a message does not take that label, and it is True if a message does contain that label.
+         Then, this function drops the column that contains all labels for each message.
+        Finally, this function writes this pandas dataframe with many columns (id, text, unigram features, bigram features, pos_count features, and labels) to the file specified in Config.
+        There is no returned object.
+        """
         try:
             os.mkdir(Config.output_dir)
         except FileExistsError:
             pass
 
         features = pd.DataFrame()
+        features["id"] = docs["id"]
         features["message"] = docs["text"]
-        features["topics"] = docs["topics"]
+
         for u in unigrams:
             u2 = "u_" + u
             features[u2] = False
@@ -248,6 +320,7 @@ class Main(object):
                         features.loc[t, p2] = 0
             features = features.drop(["pos_tags"], axis=1)
 
+        features["topics"] = docs["topics"]
         for l in labels:
             features[l] = False
             features.loc[features["topics"].str.contains(l), l] = True
