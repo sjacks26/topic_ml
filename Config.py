@@ -13,7 +13,7 @@ import os
 
 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-platform = "TW"  # Options are "TW", "FB", or "BOTH"
+platform = "BOTH"  # Options are "TW", "FB", or "BOTH"
 tw_input_data_file = os.path.join(os.path.dirname(__file__),'../../data/tw_fixed.csv')  # Should be a csv file
 fb_input_data_file = os.path.join(os.path.dirname(__file__),'../../data/fb_fixed.csv')  # Should be a csv file
 
@@ -27,8 +27,8 @@ comb_feature_file = output_dir + 'comb_features.csv'  # Will be a csv file creat
 stopwords_file = ''  # Should be a plain text file. If none provided, use NLTK English stopwords + "rt".
 
 # Primary features
-num_unigrams = 2000
-num_bigrams = 1000
+num_unigrams = 3000
+num_bigrams = 2000
 pos_restriction = False
 pos_tags = ["NOUN", "ADJ"]
 

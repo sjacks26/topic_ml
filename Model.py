@@ -6,7 +6,7 @@ import Config
 import pandas as pd
 from sklearn.model_selection import cross_val_predict
 from sklearn.svm import LinearSVC
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, f1_score
 from sklearn.linear_model import SGDClassifier, LogisticRegression
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from datetime import datetime
@@ -72,6 +72,7 @@ def main():
         The returned object is a dictionary with performance measures for each label.
         """
         performance_results = {}
+        f1s = []
         for m in matrices:
             """
             Chop up each matrix: lop off message, pull off final column for label
@@ -97,8 +98,11 @@ def main():
 
             predicted_label = cross_val_predict(classifier, features, label, cv=Config.k_folds)
             performance = classification_report(label, predicted_label)
+            f1 = f1_score(label, predicted_label, average="binary")
+            f1s.append(f1)
             performance_results[m] = performance
-        return performance_results
+        mean_f1 = sum(f1s)/len(f1s)
+        return performance_results, mean_f1
 
     models = build_models()
 
@@ -111,7 +115,8 @@ def main():
         """
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         results_file = Config.output_dir + Config.classifier + '_' + str(now) + '.txt'
-        scores = models
+        scores = models[0]
+        mean_f1 = models[1]
         topics = sorted(scores)
 
         with open(results_file, 'w') as t:
@@ -136,6 +141,8 @@ def main():
             t.write('\t' + 'Mentions: ' + str(Config.use_mentions))
             t.write('\n')
             t.write('\t' + 'NER: ' + str(Config.use_ne_chunks))
+            t.write('\n\n')
+            t.write("Simple mean of true F1 scores: " + str(mean_f1))
             t.write('\n\n')
             for f in topics:
                 t.write(f)
