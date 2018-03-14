@@ -12,7 +12,7 @@ from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from datetime import datetime
 
 
-class Main(object):
+def main():
 
     if Config.platform == "BOTH":
         feature_file = Config.comb_feature_file
@@ -131,7 +131,11 @@ class Main(object):
             t.write('\n')
             t.write('\t' + 'POS tags: ' + str(Config.pos_restriction))
             t.write('\n')
+            t.write('\t' + 'POS counts: ' + str(Config.pos_counts))
+            t.write('\n')
             t.write('\t' + 'Mentions: ' + str(Config.use_mentions))
+            t.write('\n')
+            t.write('\t' + 'NER: ' + str(Config.use_ne_chunks))
             t.write('\n\n')
             for f in topics:
                 t.write(f)
@@ -140,3 +144,6 @@ class Main(object):
                 t.write('\n')
 
     write_performance()
+
+if __name__ == "__main__":
+   main()

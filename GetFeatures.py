@@ -16,7 +16,7 @@ import os
 tknzr = TweetTokenizer()
 
 
-class Main(object):
+def main():
     def get_data(platform=Config.platform):
         """
         This function reads in data based on parameters specified in Config. It does some basic text processing (removing #, for example)
@@ -110,13 +110,19 @@ class Main(object):
         This function takes in the pandas dataframe containing 5 columns (id, text, topic, tokens, and pos) and uses NLTK's named entity chunker to identify named entities.
         By default, it uses the NE category labels. To change that, add "binary=True" as a parameter for the ne_chunk operation.
         The returned object is a pandas dataframe with 6 columns (id, text, topic, tokens, pos, and NE chunks).
+
+        NEED TO UPDATE THIS DESCRIPTION
         """
         texts = docs['text']
         chunks = []
         for text in texts:
-            chunk = nltk.ne_chunk(nltk.pos_tag(tknzr.tokenize(text)))
-            chunks.append(chunk)
-        docs['chunks'] = chunks
+            NEs = []
+            chunk = nltk.ne_chunk(nltk.pos_tag(tknzr.tokenize(text)), binary=True)
+            for c in chunk.subtrees():
+                if c.label() == "NE":
+                    NEs.append(list(c)[0][0])
+            chunks.append(NEs)
+        docs['ne_chunks'] = chunks
         return docs
 
     docs = get_tagged_chunked(docs)
@@ -320,6 +326,17 @@ class Main(object):
                         features.loc[t, p2] = 0
             features = features.drop(["pos_tags"], axis=1)
 
+        if Config.use_ne_chunks:
+            features["ne_chunks"] = docs["ne_chunks"]
+            chunks = list(features["ne_chunks"])             # I'm not sure if this is what I want.
+            chunks = [f for c in chunks for f in c]
+            chunks = list(set(chunks))
+            for chunk in chunks:
+                if chunk not in (unigrams or bigrams):
+                    features[chunk] = False
+                    features.loc[features["message"].str.contains(chunk), chunk] = True
+            features = features.drop(["ne_chunks"], axis=1)
+
         features["topics"] = docs["topics"]
         for l in labels:
             features[l] = False
@@ -335,3 +352,6 @@ class Main(object):
         features.to_csv(feature_file, index=False)
 
     write_feature_file(docs)
+
+if __name__ == "__main__":
+   main()
