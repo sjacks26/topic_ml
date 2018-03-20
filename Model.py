@@ -6,7 +6,7 @@ import Config
 import pandas as pd
 from sklearn.model_selection import cross_val_predict
 from sklearn.svm import LinearSVC
-from sklearn.metrics import classification_report, f1_score
+from sklearn.metrics import classification_report, f1_score, confusion_matrix
 from sklearn.linear_model import SGDClassifier, LogisticRegression
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from datetime import datetime
@@ -73,6 +73,7 @@ def main():
         """
         performance_results = {}
         f1s = []
+        confusion_matrices = {}
         for m in matrices:
             """
             Chop up each matrix: lop off message, pull off final column for label
@@ -98,11 +99,16 @@ def main():
 
             predicted_label = cross_val_predict(classifier, features, label, cv=Config.k_folds)
             performance = classification_report(label, predicted_label)
+            #Confusion_matrix = confusion_matrix(label, predicted_label, labels = [True, False])
+            Confusion_matrix = pd.crosstab(label, predicted_label, rownames=["True"], colnames=["Predicted"], margins=True)
+            Confusion_matrix.columns = ["False", "True", "All"]
+            Confusion_matrix.index = ["False", "True", "All"]
+            confusion_matrices[m] = Confusion_matrix
             f1 = f1_score(label, predicted_label, average="binary")
             f1s.append(f1)
             performance_results[m] = performance
         mean_f1 = sum(f1s)/len(f1s)
-        return performance_results, mean_f1
+        return performance_results, mean_f1, confusion_matrices
 
     models = build_models()
 
@@ -117,7 +123,24 @@ def main():
         results_file = Config.output_dir + Config.classifier + '_' + str(now) + '.txt'
         scores = models[0]
         mean_f1 = models[1]
+        conf_matr = models[2]
         topics = sorted(scores)
+
+        tp = 0
+        fp = 0
+        fn = 0
+        tn = 0
+
+        for cm in conf_matr:
+            cf_cm = conf_matr[cm]
+            tp += cf_cm.loc["True","True"]                  # First label is "True", second label is "Predicted"
+            fp += cf_cm.loc["False", "True"]
+            fn += cf_cm.loc["True", "False"]
+            tn += cf_cm.loc["False", "False"]
+
+        overall_precision = tp / (tp + fp)
+        overall_recall = tp / (tp + fn)
+        overall_f1 = 2 * (overall_precision * overall_recall) / (overall_precision + overall_recall)
 
         with open(results_file, 'w') as t:
             t.write("Results generated: " + str(now))
@@ -142,7 +165,7 @@ def main():
             t.write('\n')
             t.write('\t' + 'NER: ' + str(Config.use_ne_chunks))
             t.write('\n\n')
-            t.write("Simple mean of true F1 scores: " + str(mean_f1))
+            t.write("Overall micro-F1: " + str(overall_f1))
             t.write('\n\n')
             for f in topics:
                 t.write(f)
