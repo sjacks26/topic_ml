@@ -210,6 +210,26 @@ def main():
 
     docs = get_pos_counts(docs)
 
+    def get_mentions(docs):
+        """
+        This function takes in the pandas dataframe with a column called "text".
+        For each row in the dataframe, it creates a list of the words that appear in each message by splitting the message on spaces.
+        It cycles through the words in each message. If a word starts with "@", that word is added to the list of mentions.
+        The returned object is a pandas dataframe an additional column for the list of mentions in each message.
+        """
+        texts = docs['text']
+        mention_lists = []
+        for text in texts:
+            mention_list = []
+            split_text = text.split(" ")
+            for word in split_text:
+                if word.startswith("@)"):
+                    mention_list.append(word)
+            mention_lists.append(mention_list)
+        docs['mentions'] = mention_lists
+
+    docs = get_mentions(docs)
+
     def write_partial_process(docs):
         """
         This function takes in the pandas dataframe with 9 columns (id, text, topic, tokens, pos, NE chunks, unigrams, bigrams, and pos counts).
