@@ -247,7 +247,7 @@ def main():
         tokens = tknzr.tokenize(text)
         tokens1 = [w for w in tokens if not alpha_filter(w)]
         tokens2 = [w for w in tokens1 if not w in stops]
-        if not Config.use_mentions:
+        if Config.exclude_mentions:
             tokens3 = [w for w in tokens2 if not "@" in w]
         else:
             tokens3 = tokens2
@@ -262,7 +262,7 @@ def main():
         for b in bigrams1:
             if not (b[0] in stops or b[1] in stops):
                 if not alpha_filter(b[0]) and not alpha_filter(b[1]):
-                    if not Config.use_mentions:
+                    if Config.exclude_mentions:
                         if not "@" in (b[0] or b[1]):
                             b = ' '.join(b)
                             bigrams.append(str(b))

@@ -36,6 +36,7 @@ pos_tags = ["NOUN", "ADJ"]
 pos_counts = False
 use_mentions = False
 use_ne_chunks = True
+exclude_mentions = True
 
 ''' 
 Full List of POS tags: 
