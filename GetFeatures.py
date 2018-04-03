@@ -352,8 +352,8 @@ def main():
         if Config.num_mention_features != 0:
             mentions = list(docs["mentions"])
             mentions = [f for c in mentions for f in c]
-            mentions = [m for m in mentions if m[1:] not in unigrams]
-            mention_counts = nltk.FreqDist(mentions)
+            mentions = [m for m in mentions if m[1:] not in unigrams]  # This line checks to make sure handles in
+            mention_counts = nltk.FreqDist(mentions)                   # mentions aren't in the unigram features
             mention_features = list(mention_counts.most_common(Config.num_mention_features))
             mention_features = [f[0] for f in mention_features if f[1] > 1]
             for m in mention_features:
