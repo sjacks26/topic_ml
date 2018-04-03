@@ -146,7 +146,7 @@ def main():
             pos_tags = False
 
         with open(results_file, 'w') as t:
-            t.write("Results generated: " + str(now))
+            t.write("Results generated: " + str(Config.now))
             t.write('\n')
             t.write("Platform: " + Config.platform)
             t.write('\n')
