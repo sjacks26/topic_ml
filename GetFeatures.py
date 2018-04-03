@@ -145,8 +145,8 @@ def main():
         unigrams = docs['tokens']
         unigram_list = []
         pos_tags = docs['pos']
-        for u in unigrams:
-            unigramz = [w.lower() for w in u]
+        for u in range(0, len(unigrams)):
+            unigramz = [w.lower() for w in unigrams[u]]
             unigramz = [w for w in unigramz if not alpha_filter(w)]
             unigramz = [w for w in unigramz if not w in stops]
 
@@ -154,7 +154,7 @@ def main():
             if Config.pos_restriction:
                 filt_unigrams1 = []
                 for i in range(0, len(unigramz)):
-                    if pos_tags[i] in pos:
+                    if pos_tags[u][i] in pos:
                         filt_unigrams1.append(unigramz[i])
             else:
                 filt_unigrams1 = unigramz
@@ -355,9 +355,9 @@ def main():
             mentions = [m for m in mentions if m[1:] not in unigrams]  # This line checks to make sure handles in
             mention_counts = nltk.FreqDist(mentions)                   # mentions aren't in the unigram features
             mention_features = list(mention_counts.most_common(Config.num_mention_features))
-            mention_features = [f[0] for f in mention_features if f[1] > 1]
-            for m in mention_features:
-                features[m] = False
+            mention_features = [f[0] for f in mention_features if f[1] > 1]  # This line isolates the most frequent
+            for m in mention_features:                                       # mentions and makes sure that the mentions
+                features[m] = False                                          # used as features appear more than once
                 features.loc[features["message"].str.contains(m), m] = True
 
         features["topics"] = docs["topics"]

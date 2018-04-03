@@ -9,7 +9,6 @@ from sklearn.svm import LinearSVC
 from sklearn.metrics import classification_report, f1_score, confusion_matrix
 from sklearn.linear_model import SGDClassifier, LogisticRegression
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
-from datetime import datetime
 
 
 def main():
@@ -119,8 +118,7 @@ def main():
         It writes a number of lines in the text file with details about the data, classifier, and features used.
         Finally, it writes the performance measures for each label in the text file.
         """
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        results_file = Config.output_dir + Config.classifier + '_' + str(now) + '.txt'
+        results_file = Config.output_dir + Config.classifier + '_' + str(Config.now) + '.txt'
         scores = models[0]
         mean_f1 = models[1]
         conf_matr = models[2]
@@ -142,6 +140,11 @@ def main():
         overall_recall = tp / (tp + fn)
         overall_f1 = 2 * (overall_precision * overall_recall) / (overall_precision + overall_recall)
 
+        if Config.pos_restriction:
+            pos_tags = Config.pos_tags
+        else:
+            pos_tags = False
+
         with open(results_file, 'w') as t:
             t.write("Results generated: " + str(now))
             t.write('\n')
@@ -157,7 +160,7 @@ def main():
             t.write('\n')
             t.write('\t' + 'Bigrams: ' + str(Config.num_bigrams))
             t.write('\n')
-            t.write('\t' + 'POS tags: ' + str(Config.pos_restriction))
+            t.write('\t' + 'POS tags: ' + str(pos_tags))
             t.write('\n')
             t.write('\t' + 'POS counts: ' + str(Config.pos_counts))
             t.write('\n')

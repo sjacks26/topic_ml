@@ -29,14 +29,14 @@ stopwords_file = ''  # Should be a plain text file. If none provided, use NLTK E
 # Primary features
 num_unigrams = 3000
 num_bigrams = 2000
-pos_restriction = False
-pos_tags = ["NOUN", "ADJ"]
+pos_restriction = True
+pos_tags = ["NOUN", "ADJ", "VERB"]
 
 # Additional features
 pos_counts = False
 use_ne_chunks = True
 exclude_mentions = True
-num_mention_features = 100
+num_mention_features = 50
 
 ''' 
 Full List of POS tags: 
