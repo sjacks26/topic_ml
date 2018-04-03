@@ -13,7 +13,7 @@ import os
 
 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-platform = "BOTH"  # Options are "TW", "FB", or "BOTH"
+platform = "TW"  # Options are "TW", "FB", or "BOTH"
 tw_input_data_file = os.path.join(os.path.dirname(__file__),'../../data/tw_fixed.csv')  # Should be a csv file
 fb_input_data_file = os.path.join(os.path.dirname(__file__),'../../data/fb_fixed.csv')  # Should be a csv file
 
@@ -36,7 +36,7 @@ pos_tags = ["NOUN", "ADJ"]
 pos_counts = False
 use_ne_chunks = True
 exclude_mentions = True
-mentions_as_feature = True
+num_mention_features = 50
 
 ''' 
 Full List of POS tags: 

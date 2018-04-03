@@ -223,23 +223,14 @@ def main():
             mention_list = []
             split_text = text.split(" ")
             for word in split_text:
-                if word.startswith("@)"):
+                if word.startswith("@"):
                     mention_list.append(word)
             mention_lists.append(mention_list)
         docs['mentions'] = mention_lists
 
+        return docs
+
     docs = get_mentions(docs)
-
-    def write_partial_process(docs):
-        """
-        This function takes in the pandas dataframe with 9 columns (id, text, topic, tokens, pos, NE chunks, unigrams, bigrams, and pos counts).
-        It writes that dataframe to a csv file.
-        There is no returned object. This function isn't necessary to generate a feature file.
-        """
-        feature_file = Config.input_data_file.replace(".csv", "_mid_process.csv")
-        docs.to_csv(feature_file, index=False)
-
-    # write_partial_process(docs)
 
     def get_vocab(docs, stops, u_limit=Config.num_unigrams, b_limit=Config.num_bigrams):
         """
@@ -350,15 +341,24 @@ def main():
             features = features.drop(["pos_tags"], axis=1)
 
         if Config.use_ne_chunks:
-            features["ne_chunks"] = docs["ne_chunks"]
-            chunks = list(features["ne_chunks"])
+            chunks = list(docs["ne_chunks"])
             chunks = [f for c in chunks for f in c]                 # This line flattens the nested list of NE chunks
             chunks = list(set(chunks))                              # This line de-dupes the flattened list of NE chunks
             for chunk in chunks:
                 if chunk not in (unigrams or bigrams):              # This if means that only NEs that aren't in
                     features[chunk] = False                         # unigrams and bigrams are used as features
                     features.loc[features["message"].str.contains(chunk), chunk] = True
-            features = features.drop(["ne_chunks"], axis=1)
+
+        if Config.num_mention_features != 0:
+            mentions = list(docs["mentions"])
+            mentions = [f for c in mentions for f in c]
+            mentions = [m for m in mentions if m[1:] not in unigrams]
+            mention_counts = nltk.FreqDist(mentions)
+            mention_features = list(mention_counts.most_common(Config.num_mention_features))
+            mention_features = [f[0] for f in mention_features if f[1] > 1]
+            for m in mention_features:
+                features[m] = False
+                features.loc[features["message"].str.contains(m), m] = True
 
         features["topics"] = docs["topics"]
         for l in labels:
