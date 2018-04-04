@@ -17,7 +17,7 @@ platform = "BOTH"  # Options are "TW", "FB", or "BOTH"
 tw_input_data_file = os.path.join(os.path.dirname(__file__),'../../data/tw_fixed.csv')  # Should be a csv file
 fb_input_data_file = os.path.join(os.path.dirname(__file__),'../../data/fb_fixed.csv')  # Should be a csv file
 
-output_dir = '/Users/samjackson/Google Drive/Projects/Illuminating 2016/Topic/post_SMS/ML_from_scratch/' + str(now) + '/'
+output_dir = 'ML_from_scratch/' + str(now) + '/'
 
 tw_feature_file = output_dir + 'tw_features.csv'  # Will be a csv file created by GetFeatures
 fb_feature_file = output_dir + 'fb_features.csv'  # Will be a csv file created by GetFeatures
